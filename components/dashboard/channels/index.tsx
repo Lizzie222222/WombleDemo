@@ -6,6 +6,9 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { HiPlus } from 'react-icons/hi2';
+import { useState, useMemo } from 'react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Props {
   user: User | null | undefined;
@@ -33,6 +36,38 @@ const channels: Channel[] = [
 ];
 
 export default function Channels(props: Props) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState<'name' | 'interactions'>('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
+  const sortedAndFilteredChannels = useMemo(() => {
+    return channels
+      .filter(channel => 
+        channel.name.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+      .sort((a, b) => {
+        if (sortBy === 'name') {
+          return sortOrder === 'asc' 
+            ? a.name.localeCompare(b.name)
+            : b.name.localeCompare(a.name);
+        } else if (sortBy === 'interactions') {
+          return sortOrder === 'asc'
+            ? a.interactions - b.interactions
+            : b.interactions - a.interactions;
+        }
+        return 0;
+      });
+  }, [searchTerm, sortBy, sortOrder]);
+
+  const handleSort = (column: 'name' | 'interactions') => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(column);
+      setSortOrder('asc');
+    }
+  };
+
   return (
     <DashboardLayout
       user={props.user}
@@ -48,17 +83,35 @@ export default function Channels(props: Props) {
               <HiPlus className="mr-2" /> Create Channel
             </Button>
           </div>
+          <div className="mb-4">
+            <Input
+              className="max-w-sm"
+              placeholder="Search channels..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-zinc-800 dark:text-zinc-200">Channel Name</TableHead>
-                <TableHead className="text-zinc-800 dark:text-zinc-200">Interactions</TableHead>
-                <TableHead className="text-zinc-800 dark:text-zinc-200">AI Assistant</TableHead>
-                <TableHead className="text-zinc-800 dark:text-zinc-200">Actions</TableHead>
+                <TableHead 
+                  className="cursor-pointer"
+                  onClick={() => handleSort('name')}
+                >
+                  Channel Name {sortBy === 'name' && (sortOrder === 'asc' ? '▲' : '▼')}
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer"
+                  onClick={() => handleSort('interactions')}
+                >
+                  Interactions {sortBy === 'interactions' && (sortOrder === 'asc' ? '▲' : '▼')}
+                </TableHead>
+                <TableHead>AI Assistant</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {channels.map((channel) => (
+              {sortedAndFilteredChannels.map((channel) => (
                 <TableRow key={channel.id} className="hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
                   <TableCell className="font-medium text-zinc-900 dark:text-zinc-100">{channel.name}</TableCell>
                   <TableCell className="text-zinc-700 dark:text-zinc-300">{channel.interactions.toLocaleString()}</TableCell>

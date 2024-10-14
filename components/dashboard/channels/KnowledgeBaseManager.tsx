@@ -28,13 +28,14 @@ interface Props {
 
 function RagManager({ ragSections, updateRagSections }: { ragSections: RagSection[], updateRagSections: (sections: RagSection[]) => void }) {
   const [sections, setSections] = useState(ragSections);
-  const [selectedSection, setSelectedSection] = useState<RagSection | null>(null);
+  const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [selectedQAPair, setSelectedQAPair] = useState<{ question: string; answer: string } | null>(null);
+  const [editingQAPair, setEditingQAPair] = useState<{ question: string; answer: string } | null>(null);
 
   const addSection = () => {
     const newSection = { id: Date.now().toString(), title: 'New Section', qaPairs: [] };
     setSections([...sections, newSection]);
-    setSelectedSection(newSection);
+    setEditingSectionId(newSection.id);
   };
 
   const updateSection = (updatedSection: RagSection) => {
@@ -42,13 +43,12 @@ function RagManager({ ragSections, updateRagSections }: { ragSections: RagSectio
       section.id === updatedSection.id ? updatedSection : section
     );
     setSections(updatedSections);
-    setSelectedSection(updatedSection);
   };
 
   const removeSection = (sectionId: string) => {
     const updatedSections = sections.filter(section => section.id !== sectionId);
     setSections(updatedSections);
-    setSelectedSection(null);
+    setEditingSectionId(null);
     setSelectedQAPair(null);
   };
 
@@ -64,17 +64,26 @@ function RagManager({ ragSections, updateRagSections }: { ragSections: RagSectio
     setSelectedQAPair(updatedSections.find(s => s.id === sectionId)?.qaPairs.slice(-1)[0] || null);
   };
 
+  const startEditingQAPair = (qaPair: { question: string; answer: string }) => {
+    setSelectedQAPair(qaPair);
+    setEditingQAPair({ question: '', answer: '' });
+  };
+
   const updateQAPair = (sectionId: string, index: number, updatedQAPair: { question: string; answer: string }) => {
     const updatedSections = sections.map(section => {
       if (section.id === sectionId) {
         const updatedQAPairs = [...section.qaPairs];
-        updatedQAPairs[index] = updatedQAPair;
+        updatedQAPairs[index] = {
+          question: updatedQAPair.question || updatedQAPairs[index].question,
+          answer: updatedQAPair.answer || updatedQAPairs[index].answer
+        };
         return { ...section, qaPairs: updatedQAPairs };
       }
       return section;
     });
     setSections(updatedSections);
     setSelectedQAPair(updatedQAPair);
+    setEditingQAPair(null);
   };
 
   const removeQAPair = (sectionId: string, index: number) => {
@@ -97,9 +106,22 @@ function RagManager({ ragSections, updateRagSections }: { ragSections: RagSectio
           {sections.map((section) => (
             <Card key={section.id} className="p-4 mb-4">
               <div className="flex justify-between items-center mb-2">
-                <h4 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 cursor-pointer" onClick={() => setSelectedSection(section)}>
-                  {section.title}
-                </h4>
+                {editingSectionId === section.id ? (
+                  <Input
+                    value={section.title}
+                    onChange={(e) => updateSection({ ...section, title: e.target.value })}
+                    onBlur={() => setEditingSectionId(null)}
+                    className="text-lg font-semibold text-zinc-900 dark:text-zinc-100"
+                    autoFocus
+                  />
+                ) : (
+                  <h4 
+                    className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 cursor-pointer" 
+                    onClick={() => setEditingSectionId(section.id)}
+                  >
+                    {section.title}
+                  </h4>
+                )}
                 <Button variant="outline" size="sm" onClick={() => removeSection(section.id)}>
                   Remove
                 </Button>
@@ -121,28 +143,38 @@ function RagManager({ ragSections, updateRagSections }: { ragSections: RagSectio
           <Button onClick={addSection} className="w-full">Add New Section</Button>
         </div>
         <div className="w-1/2 pl-2">
-          {selectedSection && (
-            <div className="mb-4">
-              <h4 className="text-lg font-semibold mb-2 text-zinc-900 dark:text-zinc-100">Edit Section</h4>
-              <Input
-                value={selectedSection.title}
-                onChange={(e) => updateSection({ ...selectedSection, title: e.target.value })}
-                className="mb-2 text-zinc-900 dark:text-zinc-100"
-              />
-            </div>
-          )}
           {selectedQAPair && (
             <div>
               <h4 className="text-lg font-semibold mb-2 text-zinc-900 dark:text-zinc-100">Edit Q&A Pair</h4>
               <Input
-                value={selectedQAPair.question}
-                onChange={(e) => updateQAPair(selectedSection!.id, sections.find(s => s.id === selectedSection!.id)!.qaPairs.indexOf(selectedQAPair), { ...selectedQAPair, question: e.target.value })}
+                value={editingQAPair?.question ?? selectedQAPair.question}
+                onChange={(e) => setEditingQAPair({ ...editingQAPair!, question: e.target.value })}
+                onFocus={() => !editingQAPair && startEditingQAPair(selectedQAPair)}
+                onBlur={() => {
+                  if (editingQAPair) {
+                    updateQAPair(
+                      sections.find(s => s.qaPairs.includes(selectedQAPair))!.id,
+                      sections.find(s => s.qaPairs.includes(selectedQAPair))!.qaPairs.indexOf(selectedQAPair),
+                      { ...selectedQAPair, ...editingQAPair }
+                    );
+                  }
+                }}
                 className="mb-2 text-zinc-900 dark:text-zinc-100"
                 placeholder="Question"
               />
               <Textarea
-                value={selectedQAPair.answer}
-                onChange={(e) => updateQAPair(selectedSection!.id, sections.find(s => s.id === selectedSection!.id)!.qaPairs.indexOf(selectedQAPair), { ...selectedQAPair, answer: e.target.value })}
+                value={editingQAPair?.answer ?? selectedQAPair.answer}
+                onChange={(e) => setEditingQAPair({ ...editingQAPair!, answer: e.target.value })}
+                onFocus={() => !editingQAPair && startEditingQAPair(selectedQAPair)}
+                onBlur={() => {
+                  if (editingQAPair) {
+                    updateQAPair(
+                      sections.find(s => s.qaPairs.includes(selectedQAPair))!.id,
+                      sections.find(s => s.qaPairs.includes(selectedQAPair))!.qaPairs.indexOf(selectedQAPair),
+                      { ...selectedQAPair, ...editingQAPair }
+                    );
+                  }
+                }}
                 className="mb-2 text-zinc-900 dark:text-zinc-100"
                 placeholder="Answer"
               />

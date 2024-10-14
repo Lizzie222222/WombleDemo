@@ -19,8 +19,7 @@ export default function SidebarDocs() {
           Go unlimited with PRO
         </p>
         <p className="text-center text-sm font-medium text-zinc-500 dark:text-zinc-400 focus:dark:!bg-white/20 active:dark:!bg-white/20">
-          Get your AI Saas Project to another level and start doing more with
-          Horizon AI Boilerplate PRO!
+          Get the human in your AI with Wombat
         </p>
       </div>{' '}
       <a

@@ -69,7 +69,7 @@ function Sidebar(props: SidebarProps) {
                   <HiBolt className="h-5 w-5" />
                 </div>
                 <h5 className="me-2 text-2xl font-bold leading-5 text-zinc-950 dark:text-white">
-                  Horizon AI
+                  Wombat
                 </h5>
                 <Badge
                   variant="outline"

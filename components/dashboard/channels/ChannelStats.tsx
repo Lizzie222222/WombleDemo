@@ -13,6 +13,7 @@ import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ChannelContacts from './ChannelContacts';
+import KnowledgeBaseManager from './KnowledgeBaseManager';
 
 interface Props {
   user: User | null | undefined;
@@ -201,13 +202,7 @@ export default function ChannelStats({ user, userDetails, channelId }: Props) {
               </div>
             </TabsContent>
             <TabsContent value="knowledge-base">
-              <Card className="p-4">
-                <h3 className="text-xl font-semibold mb-4 text-zinc-900 dark:text-zinc-100">Knowledge Base</h3>
-                {/* Temporary placeholder text */}
-                <p className="text-zinc-700 dark:text-zinc-300">Knowledge base management will be displayed here.</p>
-                {/* Once implemented, replace the above line with: */}
-                {/* <KnowledgeBaseManager channelId={channelId} /> */}
-              </Card>
+              <KnowledgeBaseManager channelId={channelId} />
             </TabsContent>
             <TabsContent value="config">
               <Card className="p-4">

@@ -6,12 +6,13 @@ import { Card } from '@/components/ui/card';
 import MainChart from '@/components/dashboard/main/cards/MainChart';
 import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { HiOutlineChartBar, HiOutlineUsers, HiOutlineChatBubbleLeftRight, HiOutlineBookOpen, HiOutlineCog, HiUser, HiSparkles } from 'react-icons/hi2';
+import { HiOutlineChartBar, HiOutlineUsers, HiOutlineChatBubbleLeftRight, HiOutlineBookOpen, HiOutlineCog, HiUser, HiSparkles, HiPaperAirplane } from 'react-icons/hi2';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import ChannelContacts from './ChannelContacts';
 
 interface Props {
   user: User | null | undefined;
@@ -85,9 +86,8 @@ export default function ChannelStats({ user, userDetails, channelId }: Props) {
             </TabsContent>
             <TabsContent value="contacts">
               <Card className="p-4">
-                <h3 className="text-xl font-semibold mb-4">Contacts</h3>
-                {/* Add contacts component here */}
-                <p>Contacts list and management will be displayed here.</p>
+                <h3 className="text-xl font-semibold mb-4 text-zinc-900 dark:text-zinc-100">Contacts</h3>
+                <ChannelContacts />
               </Card>
             </TabsContent>
             <TabsContent value="playground" className="mt-6">
@@ -150,7 +150,7 @@ export default function ChannelStats({ user, userDetails, channelId }: Props) {
                         </SelectContent>
                       </Select>
                     </div>
-                    <Button className="w-full">Apply Settings</Button>
+                    <Button className="w-full" variant="primary">Apply Settings</Button>
                   </div>
                 </Card>
                 <Card className="p-4 w-2/3">
@@ -192,7 +192,8 @@ export default function ChannelStats({ user, userDetails, channelId }: Props) {
                         }
                       }}
                     />
-                    <Button onClick={handleSendMessage} className="px-4 py-2">
+                    <Button onClick={handleSendMessage} className="px-4 py-2 flex items-center" variant="primary">
+                      <HiPaperAirplane className="mr-2 h-4 w-4" />
                       Send
                     </Button>
                   </div>

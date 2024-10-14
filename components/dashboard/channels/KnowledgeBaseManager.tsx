@@ -28,121 +28,129 @@ interface Props {
 
 function RagManager({ ragSections, updateRagSections }: { ragSections: RagSection[], updateRagSections: (sections: RagSection[]) => void }) {
   const [sections, setSections] = useState(ragSections);
-  const [isAddQAOpen, setIsAddQAOpen] = useState(false);
-  const [currentSectionIndex, setCurrentSectionIndex] = useState<number | null>(null);
-  const [newQA, setNewQA] = useState({ question: '', answer: '' });
+  const [selectedSection, setSelectedSection] = useState<RagSection | null>(null);
+  const [selectedQAPair, setSelectedQAPair] = useState<{ question: string; answer: string } | null>(null);
 
   const addSection = () => {
-    setSections([...sections, { id: Date.now().toString(), title: '', qaPairs: [] }]);
+    const newSection = { id: Date.now().toString(), title: 'New Section', qaPairs: [] };
+    setSections([...sections, newSection]);
+    setSelectedSection(newSection);
   };
 
-  const updateSection = (index: number, updatedSection: RagSection) => {
-    const updatedSections = [...sections];
-    updatedSections[index] = updatedSection;
+  const updateSection = (updatedSection: RagSection) => {
+    const updatedSections = sections.map(section => 
+      section.id === updatedSection.id ? updatedSection : section
+    );
     setSections(updatedSections);
+    setSelectedSection(updatedSection);
   };
 
-  const removeSection = (index: number) => {
-    const updatedSections = sections.filter((_, i) => i !== index);
+  const removeSection = (sectionId: string) => {
+    const updatedSections = sections.filter(section => section.id !== sectionId);
     setSections(updatedSections);
+    setSelectedSection(null);
+    setSelectedQAPair(null);
   };
 
-  const handleSave = () => {
-    updateRagSections(sections);
+  const addQAPair = (sectionId: string) => {
+    const updatedSections = sections.map(section => {
+      if (section.id === sectionId) {
+        const newQAPair = { question: 'New Question', answer: '' };
+        return { ...section, qaPairs: [...section.qaPairs, newQAPair] };
+      }
+      return section;
+    });
+    setSections(updatedSections);
+    setSelectedQAPair(updatedSections.find(s => s.id === sectionId)?.qaPairs.slice(-1)[0] || null);
   };
 
-  const openAddQADialog = (sectionIndex: number) => {
-    setCurrentSectionIndex(sectionIndex);
-    setNewQA({ question: '', answer: '' });
-    setIsAddQAOpen(true);
+  const updateQAPair = (sectionId: string, index: number, updatedQAPair: { question: string; answer: string }) => {
+    const updatedSections = sections.map(section => {
+      if (section.id === sectionId) {
+        const updatedQAPairs = [...section.qaPairs];
+        updatedQAPairs[index] = updatedQAPair;
+        return { ...section, qaPairs: updatedQAPairs };
+      }
+      return section;
+    });
+    setSections(updatedSections);
+    setSelectedQAPair(updatedQAPair);
   };
 
-  const handleAddQA = () => {
-    if (currentSectionIndex !== null) {
-      const updatedSections = [...sections];
-      updatedSections[currentSectionIndex].qaPairs.push(newQA);
-      setSections(updatedSections);
-      setIsAddQAOpen(false);
-    }
+  const removeQAPair = (sectionId: string, index: number) => {
+    const updatedSections = sections.map(section => {
+      if (section.id === sectionId) {
+        const updatedQAPairs = section.qaPairs.filter((_, i) => i !== index);
+        return { ...section, qaPairs: updatedQAPairs };
+      }
+      return section;
+    });
+    setSections(updatedSections);
+    setSelectedQAPair(null);
   };
 
   return (
     <Card className="p-4">
       <h3 className="text-xl font-semibold mb-4 text-zinc-900 dark:text-zinc-100">RAG Sections</h3>
-      <div className="space-y-4">
-        {sections.map((section, index) => (
-          <Card key={section.id} className="p-4">
-            <div className="flex justify-between items-center mb-2">
-              <Input
-                value={section.title}
-                onChange={(e) => updateSection(index, { ...section, title: e.target.value })}
-                placeholder="Section Title"
-                className="text-zinc-900 dark:text-zinc-100"
-              />
-              <Button variant="outline" size="sm" onClick={() => removeSection(index)}>
-                Remove Section
-              </Button>
-            </div>
-            {section.qaPairs.map((qaPair, qaPairIndex) => (
-              <div key={qaPairIndex} className="mt-2 p-2 bg-zinc-100 dark:bg-zinc-800 rounded">
-                <p className="font-semibold text-zinc-900 dark:text-zinc-100">Q: {qaPair.question}</p>
-                <p className="text-zinc-700 dark:text-zinc-300">A: {qaPair.answer}</p>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    const updatedQaPairs = section.qaPairs.filter((_, i) => i !== qaPairIndex);
-                    updateSection(index, { ...section, qaPairs: updatedQaPairs });
-                  }}
-                >
+      <div className="flex space-x-4">
+        <div className="w-1/2 pr-2 border-r border-zinc-200 dark:border-zinc-700">
+          {sections.map((section) => (
+            <Card key={section.id} className="p-4 mb-4">
+              <div className="flex justify-between items-center mb-2">
+                <h4 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 cursor-pointer" onClick={() => setSelectedSection(section)}>
+                  {section.title}
+                </h4>
+                <Button variant="outline" size="sm" onClick={() => removeSection(section.id)}>
                   Remove
                 </Button>
               </div>
-            ))}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => openAddQADialog(index)}
-              className="mt-2"
-            >
-              Add Q&A Pair
-            </Button>
-          </Card>
-        ))}
-        <Button onClick={addSection}>Add New Section</Button>
-        <Button onClick={handleSave}>Save Changes</Button>
-      </div>
-
-      <Dialog open={isAddQAOpen} onOpenChange={setIsAddQAOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add Q&A Pair</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="question" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Question</label>
+              <ul>
+                {section.qaPairs.map((qaPair, index) => (
+                  <li key={index} className="mb-2">
+                    <p className="text-zinc-700 dark:text-zinc-300 cursor-pointer" onClick={() => setSelectedQAPair(qaPair)}>
+                      Q: {qaPair.question}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+              <Button variant="outline" size="sm" onClick={() => addQAPair(section.id)} className="mt-2">
+                Add Q&A Pair
+              </Button>
+            </Card>
+          ))}
+          <Button onClick={addSection} className="w-full">Add New Section</Button>
+        </div>
+        <div className="w-1/2 pl-2">
+          {selectedSection && (
+            <div className="mb-4">
+              <h4 className="text-lg font-semibold mb-2 text-zinc-900 dark:text-zinc-100">Edit Section</h4>
               <Input
-                id="question"
-                value={newQA.question}
-                onChange={(e) => setNewQA({ ...newQA, question: e.target.value })}
-                className="mt-1"
+                value={selectedSection.title}
+                onChange={(e) => updateSection({ ...selectedSection, title: e.target.value })}
+                className="mb-2 text-zinc-900 dark:text-zinc-100"
               />
             </div>
+          )}
+          {selectedQAPair && (
             <div>
-              <label htmlFor="answer" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300">Answer</label>
+              <h4 className="text-lg font-semibold mb-2 text-zinc-900 dark:text-zinc-100">Edit Q&A Pair</h4>
+              <Input
+                value={selectedQAPair.question}
+                onChange={(e) => updateQAPair(selectedSection!.id, sections.find(s => s.id === selectedSection!.id)!.qaPairs.indexOf(selectedQAPair), { ...selectedQAPair, question: e.target.value })}
+                className="mb-2 text-zinc-900 dark:text-zinc-100"
+                placeholder="Question"
+              />
               <Textarea
-                id="answer"
-                value={newQA.answer}
-                onChange={(e) => setNewQA({ ...newQA, answer: e.target.value })}
-                className="mt-1"
+                value={selectedQAPair.answer}
+                onChange={(e) => updateQAPair(selectedSection!.id, sections.find(s => s.id === selectedSection!.id)!.qaPairs.indexOf(selectedQAPair), { ...selectedQAPair, answer: e.target.value })}
+                className="mb-2 text-zinc-900 dark:text-zinc-100"
+                placeholder="Answer"
               />
             </div>
-          </div>
-          <DialogFooter>
-            <Button onClick={handleAddQA}>Add</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          )}
+        </div>
+      </div>
+      <Button onClick={() => updateRagSections(sections)} className="mt-4">Save Changes</Button>
     </Card>
   );
 }

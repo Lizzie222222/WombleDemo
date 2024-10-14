@@ -202,9 +202,11 @@ export default function ChannelStats({ user, userDetails, channelId }: Props) {
             </TabsContent>
             <TabsContent value="knowledge-base">
               <Card className="p-4">
-                <h3 className="text-xl font-semibold mb-4">Knowledge Base</h3>
-                {/* Add knowledge base component here */}
-                <p>Knowledge base management will be displayed here.</p>
+                <h3 className="text-xl font-semibold mb-4 text-zinc-900 dark:text-zinc-100">Knowledge Base</h3>
+                {/* Temporary placeholder text */}
+                <p className="text-zinc-700 dark:text-zinc-300">Knowledge base management will be displayed here.</p>
+                {/* Once implemented, replace the above line with: */}
+                {/* <KnowledgeBaseManager channelId={channelId} /> */}
               </Card>
             </TabsContent>
             <TabsContent value="config">

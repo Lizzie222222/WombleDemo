@@ -34,4 +34,10 @@ export const routes: IRoute[] = [
     ),
     collapse: false
   },
+  {
+    name: 'Contacts',
+    path: '/dashboard/contacts',
+    icon: <HiOutlineUsers className="-mt-[7px] h-4 w-4 stroke-2 text-inherit" />,
+    collapse: false
+  },
 ];

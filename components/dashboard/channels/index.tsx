@@ -9,6 +9,9 @@ import { HiPlus } from 'react-icons/hi2';
 import { useState, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { HiChevronRight } from 'react-icons/hi2';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { HiTrash } from 'react-icons/hi2';
 
 interface Props {
   user: User | null | undefined;
@@ -20,19 +23,20 @@ interface Channel {
   name: string;
   interactions: number;
   aiAssistant: string;
+  knowledgeBase: string;
 }
 
 const channels: Channel[] = [
-  { id: 1, name: 'General', interactions: 1234, aiAssistant: 'GPT-3.5' },
-  { id: 2, name: 'Support', interactions: 567, aiAssistant: 'GPT-4' },
-  { id: 3, name: 'Sales', interactions: 890, aiAssistant: 'GPT-3.5' },
-  { id: 4, name: 'Marketing', interactions: 345, aiAssistant: 'GPT-4' },
-  { id: 5, name: 'Development', interactions: 678, aiAssistant: 'GPT-3.5' },
-  { id: 6, name: 'Human Resources', interactions: 234, aiAssistant: 'GPT-4' },
-  { id: 7, name: 'Finance', interactions: 456, aiAssistant: 'GPT-3.5' },
-  { id: 8, name: 'Product Management', interactions: 789, aiAssistant: 'GPT-4' },
-  { id: 9, name: 'Customer Success', interactions: 321, aiAssistant: 'GPT-3.5' },
-  { id: 10, name: 'Research', interactions: 543, aiAssistant: 'GPT-4' },
+  { id: 1, name: 'General', interactions: 1234, aiAssistant: 'GPT-3.5', knowledgeBase: 'Company Wiki' },
+  { id: 2, name: 'Support', interactions: 567, aiAssistant: 'GPT-4', knowledgeBase: 'Support Docs' },
+  { id: 3, name: 'Sales', interactions: 890, aiAssistant: 'GPT-3.5', knowledgeBase: 'Product Catalog' },
+  { id: 4, name: 'Marketing', interactions: 345, aiAssistant: 'GPT-4', knowledgeBase: 'Marketing Materials' },
+  { id: 5, name: 'Development', interactions: 678, aiAssistant: 'GPT-3.5', knowledgeBase: 'Tech Docs' },
+  { id: 6, name: 'Human Resources', interactions: 234, aiAssistant: 'GPT-4', knowledgeBase: 'HR Policies' },
+  { id: 7, name: 'Finance', interactions: 456, aiAssistant: 'GPT-3.5', knowledgeBase: 'Financial Reports' },
+  { id: 8, name: 'Product Management', interactions: 789, aiAssistant: 'GPT-4', knowledgeBase: 'Product Roadmap' },
+  { id: 9, name: 'Customer Success', interactions: 321, aiAssistant: 'GPT-3.5', knowledgeBase: 'Customer Feedback' },
+  { id: 10, name: 'Research', interactions: 543, aiAssistant: 'GPT-4', knowledgeBase: 'Research Papers' },
 ];
 
 export default function Channels(props: Props) {
@@ -107,17 +111,54 @@ export default function Channels(props: Props) {
                   Interactions {sortBy === 'interactions' && (sortOrder === 'asc' ? '▲' : '▼')}
                 </TableHead>
                 <TableHead>AI Assistant</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead>Knowledge Base</TableHead>
+                <TableHead></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {sortedAndFilteredChannels.map((channel) => (
-                <TableRow key={channel.id} className="hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
-                  <TableCell className="font-medium text-zinc-900 dark:text-zinc-100">{channel.name}</TableCell>
-                  <TableCell className="text-zinc-700 dark:text-zinc-300">{channel.interactions.toLocaleString()}</TableCell>
-                  <TableCell className="text-zinc-700 dark:text-zinc-300">{channel.aiAssistant}</TableCell>
-                  <TableCell>
-                    <Button variant="outline" size="sm" className="hover:bg-zinc-200 dark:hover:bg-zinc-700">View</Button>
+                <TableRow 
+                  key={channel.id} 
+                  className="hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer group"
+                >
+                  <TableCell 
+                    className="font-medium text-zinc-900 dark:text-zinc-100"
+                    onClick={() => {/* Add navigation logic here */}}
+                  >
+                    {channel.name}
+                  </TableCell>
+                  <TableCell 
+                    className="text-zinc-700 dark:text-zinc-300"
+                    onClick={() => {/* Add navigation logic here */}}
+                  >
+                    {channel.interactions.toLocaleString()}
+                  </TableCell>
+                  <TableCell 
+                    className="text-zinc-700 dark:text-zinc-300"
+                    onClick={() => {/* Add navigation logic here */}}
+                  >
+                    {channel.aiAssistant}
+                  </TableCell>
+                  <TableCell 
+                    className="text-zinc-700 dark:text-zinc-300"
+                    onClick={() => {/* Add navigation logic here */}}
+                  >
+                    {channel.knowledgeBase}
+                  </TableCell>
+                  <TableCell className="w-[1%] whitespace-nowrap">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="hidden group-hover:inline-flex h-8 w-8 p-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Add delete logic here
+                        console.log(`Delete channel ${channel.id}`);
+                      }}
+                    >
+                      <HiTrash className="h-4 w-4" />
+                      <span className="sr-only">Delete</span>
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}

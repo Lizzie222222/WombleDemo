@@ -19,7 +19,7 @@ export const routes: IRoute[] = [
     collapse: false
   },
   {
-    name: 'AI Chat',
+    name: 'AI Playground',
     path: '/dashboard/ai-chat',
     icon: (
       <HiOutlineChatBubbleLeftRight className="-mt-[7px] h-4 w-4 stroke-2 text-inherit" />

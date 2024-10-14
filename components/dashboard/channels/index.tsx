@@ -27,20 +27,20 @@ interface Channel {
   knowledgeBase: string;
 }
 
-const channels: Channel[] = [
-  { id: 1, name: 'General', interactions: 1234, aiAssistant: 'GPT-3.5', knowledgeBase: 'Company Wiki' },
-  { id: 2, name: 'Support', interactions: 567, aiAssistant: 'GPT-4', knowledgeBase: 'Support Docs' },
-  { id: 3, name: 'Sales', interactions: 890, aiAssistant: 'GPT-3.5', knowledgeBase: 'Product Catalog' },
-  { id: 4, name: 'Marketing', interactions: 345, aiAssistant: 'GPT-4', knowledgeBase: 'Marketing Materials' },
-  { id: 5, name: 'Development', interactions: 678, aiAssistant: 'GPT-3.5', knowledgeBase: 'Tech Docs' },
-  { id: 6, name: 'Human Resources', interactions: 234, aiAssistant: 'GPT-4', knowledgeBase: 'HR Policies' },
-  { id: 7, name: 'Finance', interactions: 456, aiAssistant: 'GPT-3.5', knowledgeBase: 'Financial Reports' },
-  { id: 8, name: 'Product Management', interactions: 789, aiAssistant: 'GPT-4', knowledgeBase: 'Product Roadmap' },
-  { id: 9, name: 'Customer Success', interactions: 321, aiAssistant: 'GPT-3.5', knowledgeBase: 'Customer Feedback' },
-  { id: 10, name: 'Research', interactions: 543, aiAssistant: 'GPT-4', knowledgeBase: 'Research Papers' },
-];
-
 export default function Channels(props: Props) {
+  const [channels, setChannels] = useState<Channel[]>([
+    { id: 1, name: 'General', interactions: 1234, aiAssistant: 'GPT-3.5', knowledgeBase: 'Company Wiki' },
+    { id: 2, name: 'Support', interactions: 567, aiAssistant: 'GPT-4', knowledgeBase: 'Support Docs' },
+    { id: 3, name: 'Sales', interactions: 890, aiAssistant: 'GPT-3.5', knowledgeBase: 'Product Catalog' },
+    { id: 4, name: 'Marketing', interactions: 345, aiAssistant: 'GPT-4', knowledgeBase: 'Marketing Materials' },
+    { id: 5, name: 'Development', interactions: 678, aiAssistant: 'GPT-3.5', knowledgeBase: 'Tech Docs' },
+    { id: 6, name: 'Human Resources', interactions: 234, aiAssistant: 'GPT-4', knowledgeBase: 'HR Policies' },
+    { id: 7, name: 'Finance', interactions: 456, aiAssistant: 'GPT-3.5', knowledgeBase: 'Financial Reports' },
+    { id: 8, name: 'Product Management', interactions: 789, aiAssistant: 'GPT-4', knowledgeBase: 'Product Roadmap' },
+    { id: 9, name: 'Customer Success', interactions: 321, aiAssistant: 'GPT-3.5', knowledgeBase: 'Customer Feedback' },
+    { id: 10, name: 'Research', interactions: 543, aiAssistant: 'GPT-4', knowledgeBase: 'Research Papers' },
+  ]);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'interactions'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
@@ -65,7 +65,7 @@ export default function Channels(props: Props) {
         }
         return 0;
       });
-  }, [searchTerm, sortBy, sortOrder]);
+  }, [searchTerm, sortBy, sortOrder, channels]);
 
   const handleSort = (column: 'name' | 'interactions') => {
     if (sortBy === column) {
@@ -95,8 +95,13 @@ export default function Channels(props: Props) {
   };
 
   const handleCreateChannel = () => {
-    // Logic to create the channel
-    console.log('Creating channel:', newChannel);
+    const newChannelWithId: Channel = {
+      ...newChannel,
+      id: channels.length + 1,
+      interactions: 0,
+    };
+    setChannels([...channels, newChannelWithId]);
+    console.log('Creating channel:', newChannelWithId);
     closeCreateModal();
   };
 

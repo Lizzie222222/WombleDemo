@@ -13,6 +13,7 @@ import { HiChevronRight } from 'react-icons/hi2';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { HiTrash } from 'react-icons/hi2';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { useRouter } from 'next/navigation';
 
 interface Props {
   user: User | null | undefined;
@@ -47,6 +48,7 @@ export default function Channels(props: Props) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [wizardStep, setWizardStep] = useState(1);
   const [newChannel, setNewChannel] = useState({ name: '', aiAssistant: '', knowledgeBase: '' });
+  const router = useRouter();
 
   const sortedAndFilteredChannels = useMemo(() => {
     return channels
@@ -153,29 +155,18 @@ export default function Channels(props: Props) {
                 <TableRow 
                   key={channel.id} 
                   className="hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer group"
+                  onClick={() => router.push(`/dashboard/channels/${channel.id}`)}
                 >
-                  <TableCell 
-                    className="font-medium text-zinc-900 dark:text-zinc-100"
-                    onClick={() => {/* Add navigation logic here */}}
-                  >
+                  <TableCell className="font-medium text-zinc-900 dark:text-zinc-100">
                     {channel.name}
                   </TableCell>
-                  <TableCell 
-                    className="text-zinc-700 dark:text-zinc-300"
-                    onClick={() => {/* Add navigation logic here */}}
-                  >
+                  <TableCell className="text-zinc-700 dark:text-zinc-300">
                     {channel.interactions.toLocaleString()}
                   </TableCell>
-                  <TableCell 
-                    className="text-zinc-700 dark:text-zinc-300"
-                    onClick={() => {/* Add navigation logic here */}}
-                  >
+                  <TableCell className="text-zinc-700 dark:text-zinc-300">
                     {channel.aiAssistant}
                   </TableCell>
-                  <TableCell 
-                    className="text-zinc-700 dark:text-zinc-300"
-                    onClick={() => {/* Add navigation logic here */}}
-                  >
+                  <TableCell className="text-zinc-700 dark:text-zinc-300">
                     {channel.knowledgeBase}
                   </TableCell>
                   <TableCell className="w-[1%] whitespace-nowrap">

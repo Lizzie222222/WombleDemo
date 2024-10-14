@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { HiChevronRight } from 'react-icons/hi2';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { HiTrash } from 'react-icons/hi2';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 interface Props {
   user: User | null | undefined;
@@ -43,6 +44,9 @@ export default function Channels(props: Props) {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'interactions'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [wizardStep, setWizardStep] = useState(1);
+  const [newChannel, setNewChannel] = useState({ name: '', aiAssistant: '', knowledgeBase: '' });
 
   const sortedAndFilteredChannels = useMemo(() => {
     return channels
@@ -72,6 +76,30 @@ export default function Channels(props: Props) {
     }
   };
 
+  const openCreateModal = () => {
+    setIsCreateModalOpen(true);
+    setWizardStep(1);
+    setNewChannel({ name: '', aiAssistant: '', knowledgeBase: '' });
+  };
+
+  const closeCreateModal = () => {
+    setIsCreateModalOpen(false);
+  };
+
+  const handleNextStep = () => {
+    setWizardStep(wizardStep + 1);
+  };
+
+  const handlePreviousStep = () => {
+    setWizardStep(wizardStep - 1);
+  };
+
+  const handleCreateChannel = () => {
+    // Logic to create the channel
+    console.log('Creating channel:', newChannel);
+    closeCreateModal();
+  };
+
   return (
     <DashboardLayout
       user={props.user}
@@ -83,7 +111,7 @@ export default function Channels(props: Props) {
         <Card className="p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-zinc-950 dark:text-white">Channels</h2>
-            <Button className="flex items-center">
+            <Button className="flex items-center" onClick={openCreateModal}>
               <HiPlus className="mr-2" /> Create Channel
             </Button>
           </div>
@@ -166,6 +194,63 @@ export default function Channels(props: Props) {
           </Table>
         </Card>
       </div>
+      <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Channel</DialogTitle>
+          </DialogHeader>
+          {wizardStep === 1 && (
+            <div>
+              <label htmlFor="channelName" className="block text-sm font-medium text-gray-700">Channel Name</label>
+              <Input
+                id="channelName"
+                value={newChannel.name}
+                onChange={(e) => setNewChannel({...newChannel, name: e.target.value})}
+                className="mt-1"
+              />
+            </div>
+          )}
+          {wizardStep === 2 && (
+            <div>
+              <label htmlFor="aiAssistant" className="block text-sm font-medium text-gray-700">AI Assistant</label>
+              <Select
+                value={newChannel.aiAssistant}
+                onValueChange={(value) => setNewChannel({...newChannel, aiAssistant: value})}
+              >
+                <SelectTrigger id="aiAssistant">
+                  <SelectValue placeholder="Select AI Assistant" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="GPT-3.5">GPT-3.5</SelectItem>
+                  <SelectItem value="GPT-4">GPT-4</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          {wizardStep === 3 && (
+            <div>
+              <label htmlFor="knowledgeBase" className="block text-sm font-medium text-gray-700">Knowledge Base (Optional)</label>
+              <Input
+                id="knowledgeBase"
+                value={newChannel.knowledgeBase}
+                onChange={(e) => setNewChannel({...newChannel, knowledgeBase: e.target.value})}
+                className="mt-1"
+                placeholder="Enter knowledge base or leave empty"
+              />
+            </div>
+          )}
+          <DialogFooter>
+            {wizardStep > 1 && (
+              <Button variant="outline" onClick={handlePreviousStep}>Back</Button>
+            )}
+            {wizardStep < 3 ? (
+              <Button onClick={handleNextStep}>Next</Button>
+            ) : (
+              <Button onClick={handleCreateChannel}>Create</Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

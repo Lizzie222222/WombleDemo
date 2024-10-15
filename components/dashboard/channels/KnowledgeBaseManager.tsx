@@ -74,8 +74,8 @@ function RagManager({ ragSections, updateRagSections }: { ragSections: RagSectio
       if (section.id === sectionId) {
         const updatedQAPairs = [...section.qaPairs];
         updatedQAPairs[index] = {
-          question: updatedQAPair.question || updatedQAPairs[index].question,
-          answer: updatedQAPair.answer || updatedQAPairs[index].answer
+          question: updatedQAPair.question,
+          answer: updatedQAPair.answer
         };
         return { ...section, qaPairs: updatedQAPairs };
       }
@@ -100,7 +100,7 @@ function RagManager({ ragSections, updateRagSections }: { ragSections: RagSectio
 
   return (
     <Card className="p-4">
-      <h3 className="text-xl font-semibold mb-4 text-zinc-900 dark:text-zinc-100">RAG Sections</h3>
+      <h3 className="text-xl font-semibold mb-4 text-zinc-900 dark:text-zinc-100">RAG Management</h3>
       <div className="flex space-x-4">
         <div className="w-1/2 pr-2 border-r border-zinc-200 dark:border-zinc-700">
           {sections.map((section) => (
@@ -149,13 +149,13 @@ function RagManager({ ragSections, updateRagSections }: { ragSections: RagSectio
               <Input
                 value={editingQAPair?.question ?? selectedQAPair.question}
                 onChange={(e) => setEditingQAPair({ ...editingQAPair!, question: e.target.value })}
-                onFocus={() => !editingQAPair && startEditingQAPair(selectedQAPair)}
+                onFocus={() => !editingQAPair && setEditingQAPair(selectedQAPair)}
                 onBlur={() => {
                   if (editingQAPair) {
                     updateQAPair(
                       sections.find(s => s.qaPairs.includes(selectedQAPair))!.id,
                       sections.find(s => s.qaPairs.includes(selectedQAPair))!.qaPairs.indexOf(selectedQAPair),
-                      { ...selectedQAPair, ...editingQAPair }
+                      editingQAPair
                     );
                   }
                 }}
@@ -165,13 +165,13 @@ function RagManager({ ragSections, updateRagSections }: { ragSections: RagSectio
               <Textarea
                 value={editingQAPair?.answer ?? selectedQAPair.answer}
                 onChange={(e) => setEditingQAPair({ ...editingQAPair!, answer: e.target.value })}
-                onFocus={() => !editingQAPair && startEditingQAPair(selectedQAPair)}
+                onFocus={() => !editingQAPair && setEditingQAPair(selectedQAPair)}
                 onBlur={() => {
                   if (editingQAPair) {
                     updateQAPair(
                       sections.find(s => s.qaPairs.includes(selectedQAPair))!.id,
                       sections.find(s => s.qaPairs.includes(selectedQAPair))!.qaPairs.indexOf(selectedQAPair),
-                      { ...selectedQAPair, ...editingQAPair }
+                      editingQAPair
                     );
                   }
                 }}
@@ -342,7 +342,7 @@ export default function KnowledgeBaseManager({ channelId }: Props) {
           )}
           {wizardStep === 3 && (
             <div className="space-y-4">
-              <h4 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">RAG Sections</h4>
+              <h4 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">RAG Management</h4>
               {newKnowledgeBase.ragSections.map((section, sectionIndex) => (
                 <Card key={section.id} className="p-4">
                   <div className="flex justify-between items-center mb-2">

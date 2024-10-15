@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { HiPlus, HiOutlineDocumentText, HiOutlineCog, HiTrash } from 'react-icons/hi';
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import Confetti from 'react-confetti';
 
 interface Variant {
   id: string;
@@ -423,6 +424,8 @@ export default function KnowledgeBaseManager({ channelId }: Props) {
     variantTypes: [],
   });
   const [isRagManagerOpen, setIsRagManagerOpen] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [isFadingOut, setIsFadingOut] = useState(false);
 
   useEffect(() => {
     // Fetch knowledge base data for the channel
@@ -458,8 +461,21 @@ export default function KnowledgeBaseManager({ channelId }: Props) {
   const handleCreateKnowledgeBase = () => {
     // Add logic to create the knowledge base
     setKnowledgeBase(newKnowledgeBase);
-    closeWizard();
+    setShowConfetti(true);
+    setIsFadingOut(true);
+    setTimeout(() => {
+      closeWizard();
+      setIsFadingOut(false);
+      setShowConfetti(false);
+    }, 3000); // Adjust this time as needed
   };
+
+  useEffect(() => {
+    if (showConfetti) {
+      const timer = setTimeout(() => setShowConfetti(false), 5000); // Stop confetti after 5 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [showConfetti]);
 
   return (
     <div className="space-y-4">
@@ -511,7 +527,7 @@ export default function KnowledgeBaseManager({ channelId }: Props) {
       )}
       {/* Wizard Dialog */}
       <Dialog open={isWizardOpen} onOpenChange={setIsWizardOpen}>
-        <DialogContent>
+        <DialogContent className={`transition-opacity duration-1000 ${isFadingOut ? 'opacity-0' : 'opacity-100'}`}>
           <DialogHeader>
             <DialogTitle className="text-zinc-900 dark:text-zinc-100">{knowledgeBase ? 'Configure Knowledge Base' : 'Add Knowledge Base'}</DialogTitle>
           </DialogHeader>
@@ -657,6 +673,15 @@ export default function KnowledgeBaseManager({ channelId }: Props) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {showConfetti && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+          <Confetti />
+          <div className="bg-white dark:bg-zinc-800 p-6 rounded-lg shadow-lg text-center">
+            <h2 className="text-2xl font-bold mb-2">Knowledge Base Added!</h2>
+            <p>Your new knowledge base is ready to use.</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

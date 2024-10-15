@@ -90,6 +90,7 @@
     "php-serialize": "^4.1.1",
     "react": "18.3.1",
     "react-apexcharts": "1.4.1",
+    "react-confetti": "^6.1.0",
     "react-custom-scrollbars-2": "^4.5.0",
     "react-day-picker": "^8.10.1",
     "react-dom": "18.3.1",

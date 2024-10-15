@@ -39,15 +39,22 @@ interface KnowledgeBase {
     name: string;
     options: string[];
   }[];
-  ragSections: RagSection[];
+  // Remove the ragSections property
 }
 
 interface Props {
   channelId: string;
 }
 
-function RagManager({ ragSections, updateRagSections, knowledgeBase }: { ragSections: RagSection[], updateRagSections: (sections: RagSection[]) => void, knowledgeBase: KnowledgeBase }) {
-  const [sections, setSections] = useState<RagSection[]>(ragSections);
+interface RagManagerProps {
+  knowledgeBase: KnowledgeBase;
+  updateKnowledgeBase: React.Dispatch<React.SetStateAction<KnowledgeBase>>;
+}
+
+function RagManager({ knowledgeBase, updateKnowledgeBase }: RagManagerProps) {
+  // If you still need to manage sections, you could use local state:
+  const [sections, setSections] = useState<RagSection[]>([]);
+
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const [selectedQAPair, setSelectedQAPair] = useState<QAPair | null>(null);
   const [editingQAPair, setEditingQAPair] = useState<QAPair | null>(null);
@@ -194,6 +201,13 @@ function RagManager({ ragSections, updateRagSections, knowledgeBase }: { ragSect
       sections.find(s => s.qaPairs.includes(selectedQAPair))!.qaPairs.indexOf(selectedQAPair),
       updatedQAPair
     );
+  };
+
+  // Update sections
+  const updateSections = (newSections: RagSection[]) => {
+    setSections(newSections);
+    // If you need to update the knowledgeBase with this information,
+    // you could do so here, or in a useEffect hook
   };
 
   return (
@@ -391,7 +405,7 @@ function RagManager({ ragSections, updateRagSections, knowledgeBase }: { ragSect
           )}
         </div>
       </div>
-      <Button onClick={() => updateRagSections(sections)} className="mt-4">Save Changes</Button>
+      <Button onClick={() => updateKnowledgeBase({ ...knowledgeBase })} className="mt-4">Save Changes</Button>
     </Card>
   );
 }
@@ -407,7 +421,6 @@ export default function KnowledgeBaseManager({ channelId }: Props) {
     maxRagResults: 3,
     confidenceScore: 0.7,
     variantTypes: [],
-    ragSections: [],
   });
   const [isRagManagerOpen, setIsRagManagerOpen] = useState(false);
 
@@ -431,12 +444,11 @@ export default function KnowledgeBaseManager({ channelId }: Props) {
       maxRagResults: 3,
       confidenceScore: 0.7,
       variantTypes: [],
-      ragSections: [],
     });
   };
 
   const handleNextStep = () => {
-    setWizardStep(wizardStep + 1);
+    setWizardStep(Math.min(wizardStep + 1, 3));
   };
 
   const handlePreviousStep = () => {
@@ -447,11 +459,6 @@ export default function KnowledgeBaseManager({ channelId }: Props) {
     // Add logic to create the knowledge base
     setKnowledgeBase(newKnowledgeBase);
     closeWizard();
-  };
-
-  const updateRagSections = (sections: RagSection[]) => {
-    setKnowledgeBase({ ...knowledgeBase!, ragSections: sections });
-    setIsRagManagerOpen(false);
   };
 
   return (
@@ -484,7 +491,12 @@ export default function KnowledgeBaseManager({ channelId }: Props) {
               </div>
             </div>
           </Card>
-          <RagManager ragSections={knowledgeBase.ragSections} updateRagSections={updateRagSections} knowledgeBase={knowledgeBase} />
+          {knowledgeBase && (
+            <RagManager 
+              knowledgeBase={knowledgeBase} 
+              updateKnowledgeBase={setKnowledgeBase}
+            />
+          )}
         </>
       ) : (
         <div className="text-center py-8">
@@ -633,104 +645,11 @@ export default function KnowledgeBaseManager({ channelId }: Props) {
               </Button>
             </div>
           )}
-          {wizardStep === 4 && (
-            <div className="space-y-4">
-              <h4 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">RAG Management</h4>
-              {newKnowledgeBase.ragSections.map((section, sectionIndex) => (
-                <Card key={section.id} className="p-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <Input
-                      value={section.title}
-                      onChange={(e) => {
-                        const updatedSections = [...newKnowledgeBase.ragSections];
-                        updatedSections[sectionIndex].title = e.target.value;
-                        setNewKnowledgeBase({...newKnowledgeBase, ragSections: updatedSections});
-                      }}
-                      placeholder="Section Title"
-                      className="text-zinc-900 dark:text-zinc-100"
-                    />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        const updatedSections = newKnowledgeBase.ragSections.filter((_, index) => index !== sectionIndex);
-                        setNewKnowledgeBase({...newKnowledgeBase, ragSections: updatedSections});
-                      }}
-                    >
-                      Remove Section
-                    </Button>
-                  </div>
-                  {section.qaPairs.map((qaPair, qaPairIndex) => (
-                    <div key={qaPairIndex} className="mt-2 space-y-2">
-                      <Input
-                        value={qaPair.question}
-                        onChange={(e) => {
-                          const updatedSections = [...newKnowledgeBase.ragSections];
-                          updatedSections[sectionIndex].qaPairs[qaPairIndex].question = e.target.value;
-                          setNewKnowledgeBase({...newKnowledgeBase, ragSections: updatedSections});
-                        }}
-                        placeholder="Question"
-                        className="text-zinc-900 dark:text-zinc-100"
-                      />
-                      <Textarea
-                        value={qaPair.answer}
-                        onChange={(e) => {
-                          const updatedSections = [...newKnowledgeBase.ragSections];
-                          updatedSections[sectionIndex].qaPairs[qaPairIndex].answer = e.target.value;
-                          setNewKnowledgeBase({...newKnowledgeBase, ragSections: updatedSections});
-                        }}
-                        placeholder="Answer"
-                        className="text-zinc-900 dark:text-zinc-100"
-                      />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          const updatedSections = [...newKnowledgeBase.ragSections];
-                          updatedSections[sectionIndex].qaPairs = updatedSections[sectionIndex].qaPairs.filter((_, index) => index !== qaPairIndex);
-                          setNewKnowledgeBase({...newKnowledgeBase, ragSections: updatedSections});
-                        }}
-                      >
-                        Remove Q&A Pair
-                      </Button>
-                    </div>
-                  ))}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const updatedSections = [...newKnowledgeBase.ragSections];
-                      updatedSections[sectionIndex].qaPairs.push({ question: '', answer: '', variants: [] });
-                      setNewKnowledgeBase({...newKnowledgeBase, ragSections: updatedSections});
-                    }}
-                    className="mt-2"
-                  >
-                    Add Q&A Pair
-                  </Button>
-                </Card>
-              ))}
-              <Button
-                onClick={() => {
-                  const newSection: RagSection = {
-                    id: Date.now().toString(),
-                    title: '',
-                    qaPairs: [{ question: '', answer: '', variants: [] }],
-                  };
-                  setNewKnowledgeBase({
-                    ...newKnowledgeBase,
-                    ragSections: [...newKnowledgeBase.ragSections, newSection],
-                  });
-                }}
-              >
-                Add New Section
-              </Button>
-            </div>
-          )}
           <DialogFooter>
             {wizardStep > 1 && (
               <Button variant="outline" onClick={handlePreviousStep}>Back</Button>
             )}
-            {wizardStep < 4 ? (
+            {wizardStep < 3 ? (
               <Button onClick={handleNextStep}>Next</Button>
             ) : (
               <Button onClick={handleCreateKnowledgeBase}>{knowledgeBase ? 'Update' : 'Create'}</Button>

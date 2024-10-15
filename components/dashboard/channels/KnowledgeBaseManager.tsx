@@ -6,11 +6,26 @@ import { Slider } from "@/components/ui/slider";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { HiPlus, HiOutlineDocumentText, HiOutlineCog, HiTrash } from 'react-icons/hi';
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+
+interface Variant {
+  id: string;
+  typeId: string;
+  value: string;
+  answer: string;
+  active?: boolean; // Optional active property
+}
+
+interface QAPair {
+  question: string;
+  answer: string;
+  variants: Variant[];
+}
 
 interface RagSection {
   id: string;
   title: string;
-  qaPairs: { question: string; answer: string }[];
+  qaPairs: QAPair[];
 }
 
 interface KnowledgeBase {
@@ -19,6 +34,11 @@ interface KnowledgeBase {
   contextLimit: number;
   maxRagResults: number;
   confidenceScore: number;
+  variantTypes: {
+    id: string;
+    name: string;
+    options: string[];
+  }[];
   ragSections: RagSection[];
 }
 
@@ -26,15 +46,15 @@ interface Props {
   channelId: string;
 }
 
-function RagManager({ ragSections, updateRagSections }: { ragSections: RagSection[], updateRagSections: (sections: RagSection[]) => void }) {
-  const [sections, setSections] = useState(ragSections);
+function RagManager({ ragSections, updateRagSections, knowledgeBase }: { ragSections: RagSection[], updateRagSections: (sections: RagSection[]) => void, knowledgeBase: KnowledgeBase }) {
+  const [sections, setSections] = useState<RagSection[]>(ragSections);
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
-  const [selectedQAPair, setSelectedQAPair] = useState<{ question: string; answer: string } | null>(null);
-  const [editingQAPair, setEditingQAPair] = useState<{ question: string; answer: string } | null>(null);
+  const [selectedQAPair, setSelectedQAPair] = useState<QAPair | null>(null);
+  const [editingQAPair, setEditingQAPair] = useState<QAPair | null>(null);
 
-  const handleSelectQAPair = (qaPair: { question: string; answer: string }) => {
+  const handleSelectQAPair = (qaPair: QAPair) => {
     setSelectedQAPair(qaPair);
-    setEditingQAPair(null); // Reset editingQAPair when a new pair is selected
+    setEditingQAPair(null);
   };
 
   const addSection = () => {
@@ -58,7 +78,7 @@ function RagManager({ ragSections, updateRagSections }: { ragSections: RagSectio
   };
 
   const addQAPair = (sectionId: string) => {
-    const newQAPair = { question: 'New Question', answer: '' };
+    const newQAPair: QAPair = { question: 'New Question', answer: '', variants: [] };
     const updatedSections = sections.map(section => {
       if (section.id === sectionId) {
         return { ...section, qaPairs: [...section.qaPairs, newQAPair] };
@@ -70,12 +90,12 @@ function RagManager({ ragSections, updateRagSections }: { ragSections: RagSectio
     setEditingQAPair(newQAPair);
   };
 
-  const startEditingQAPair = (qaPair: { question: string; answer: string }) => {
+  const startEditingQAPair = (qaPair: QAPair) => {
     setSelectedQAPair(qaPair);
-    setEditingQAPair({ question: '', answer: '' });
+    setEditingQAPair({ ...qaPair });
   };
 
-  const updateQAPair = (sectionId: string, index: number, updatedQAPair: { question: string; answer: string }) => {
+  const updateQAPair = (sectionId: string, index: number, updatedQAPair: QAPair) => {
     const updatedSections = sections.map(section => {
       if (section.id === sectionId) {
         const updatedQAPairs = [...section.qaPairs];
@@ -120,6 +140,62 @@ function RagManager({ ragSections, updateRagSections }: { ragSections: RagSectio
     setEditingQAPair(null);
   };
 
+  const addVariant = () => {
+    if (!selectedQAPair) return;
+    const newVariant: Variant = {
+      id: Date.now().toString(),
+      typeId: '',
+      value: '',
+      answer: ''
+    };
+    const updatedQAPair = {
+      ...selectedQAPair,
+      variants: [...selectedQAPair.variants, newVariant]
+    };
+    updateQAPair(
+      sections.find(s => s.qaPairs.includes(selectedQAPair))!.id,
+      sections.find(s => s.qaPairs.includes(selectedQAPair))!.qaPairs.indexOf(selectedQAPair),
+      updatedQAPair
+    );
+  };
+
+  const updateVariant = (variantId: string, updates: Partial<Variant>) => {
+    if (!selectedQAPair) return;
+    const updatedVariants = selectedQAPair.variants.map(v =>
+      v.id === variantId ? { ...v, ...updates } : v
+    );
+    const updatedQAPair = { ...selectedQAPair, variants: updatedVariants };
+    updateQAPair(
+      sections.find(s => s.qaPairs.includes(selectedQAPair))!.id,
+      sections.find(s => s.qaPairs.includes(selectedQAPair))!.qaPairs.indexOf(selectedQAPair),
+      updatedQAPair
+    );
+  };
+
+  const removeVariant = (variantId: string) => {
+    if (!selectedQAPair) return;
+    const updatedVariants = selectedQAPair.variants.filter(v => v.id !== variantId);
+    const updatedQAPair = { ...selectedQAPair, variants: updatedVariants };
+    updateQAPair(
+      sections.find(s => s.qaPairs.includes(selectedQAPair))!.id,
+      sections.find(s => s.qaPairs.includes(selectedQAPair))!.qaPairs.indexOf(selectedQAPair),
+      updatedQAPair
+    );
+  };
+
+  const toggleVariantActive = (variantId: string) => {
+    if (!selectedQAPair) return;
+    const updatedVariants = selectedQAPair.variants.map(v =>
+      v.id === variantId ? { ...v, active: !v.active } : v
+    );
+    const updatedQAPair = { ...selectedQAPair, variants: updatedVariants };
+    updateQAPair(
+      sections.find(s => s.qaPairs.includes(selectedQAPair))!.id,
+      sections.find(s => s.qaPairs.includes(selectedQAPair))!.qaPairs.indexOf(selectedQAPair),
+      updatedQAPair
+    );
+  };
+
   return (
     <Card className="p-4">
       <h3 className="text-xl font-semibold mb-4 text-zinc-900 dark:text-zinc-100">RAG Management</h3>
@@ -162,6 +238,11 @@ function RagManager({ ragSections, updateRagSections }: { ragSections: RagSectio
                     <p className="text-zinc-700 dark:text-zinc-300">
                       Q: {qaPair.question}
                     </p>
+                    {qaPair.variants.map(v => (
+                      <p key={v.id} className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                        Variant: {knowledgeBase.variantTypes.find(vt => vt.id === v.typeId)?.name}: {v.value}
+                      </p>
+                    ))}
                   </li>
                 ))}
               </ul>
@@ -195,8 +276,15 @@ function RagManager({ ragSections, updateRagSections }: { ragSections: RagSectio
                   <Input
                     id="question"
                     value={editingQAPair?.question ?? selectedQAPair.question}
-                    onChange={(e) => setEditingQAPair({ ...editingQAPair!, question: e.target.value })}
-                    onFocus={() => !editingQAPair && setEditingQAPair(selectedQAPair)}
+                    onChange={(e) => setEditingQAPair({ ...editingQAPair!, question: e.target.value, variants: editingQAPair!.variants })}
+                    onFocus={() => {
+                      if (!editingQAPair) {
+                        setEditingQAPair({ ...selectedQAPair });
+                      }
+                      if (selectedQAPair.question === 'New Question') {
+                        setEditingQAPair({ ...selectedQAPair, question: '' });
+                      }
+                    }}
                     onBlur={() => {
                       if (editingQAPair) {
                         const sectionId = sections.find(s => s.qaPairs.includes(selectedQAPair))!.id;
@@ -210,12 +298,12 @@ function RagManager({ ragSections, updateRagSections }: { ragSections: RagSectio
                 </div>
                 <div>
                   <label htmlFor="answer" className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
-                    Answer
+                    Default Answer
                   </label>
                   <Textarea
                     id="answer"
                     value={editingQAPair?.answer ?? selectedQAPair.answer}
-                    onChange={(e) => setEditingQAPair({ ...editingQAPair!, answer: e.target.value })}
+                    onChange={(e) => setEditingQAPair({ ...editingQAPair!, answer: e.target.value, variants: editingQAPair!.variants })}
                     onFocus={() => !editingQAPair && setEditingQAPair(selectedQAPair)}
                     onBlur={() => {
                       if (editingQAPair) {
@@ -225,9 +313,74 @@ function RagManager({ ragSections, updateRagSections }: { ragSections: RagSectio
                       }
                     }}
                     className="w-full text-zinc-900 dark:text-zinc-100"
-                    placeholder="Enter answer"
+                    placeholder="Enter default answer"
                     rows={5}
                   />
+                </div>
+                <div>
+                  <h5 className="text-md font-semibold text-zinc-900 dark:text-zinc-100 mb-2">Variants</h5>
+                  {knowledgeBase.variantTypes.map((variantType) => (
+                    <div key={variantType.id} className="mb-4">
+                      <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                        {variantType.name}
+                      </label>
+                      <select
+                        value={selectedQAPair?.variants.find(v => v.typeId === variantType.id)?.value || ''}
+                        onChange={(e) => {
+                          if (!selectedQAPair) return;
+                          const updatedVariants = selectedQAPair.variants.filter(v => v.typeId !== variantType.id);
+                          if (e.target.value) {
+                            updatedVariants.push({
+                              id: Date.now().toString(),
+                              typeId: variantType.id,
+                              value: e.target.value,
+                              answer: ''
+                            });
+                          }
+                          updateQAPair(
+                            sections.find(s => s.qaPairs.includes(selectedQAPair))!.id,
+                            sections.find(s => s.qaPairs.includes(selectedQAPair))!.qaPairs.indexOf(selectedQAPair),
+                            { ...selectedQAPair, variants: updatedVariants }
+                          );
+                        }}
+                        className="w-full p-2 border rounded text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-800"
+                      >
+                        <option value="">Select {variantType.name}</option>
+                        {variantType.options.map((option) => (
+                          <option key={option} value={option}>{option}</option>
+                        ))}
+                      </select>
+                    </div>
+                  ))}
+                  {selectedQAPair?.variants.map((variant) => (
+                    <div key={variant.id} className="mb-4 p-4 border rounded">
+                      <div className="flex justify-between items-center mb-2">
+                        <p className="font-medium text-zinc-700 dark:text-zinc-300">
+                          {knowledgeBase.variantTypes.find(vt => vt.id === variant.typeId)?.name}: {variant.value}
+                        </p>
+                        <div>
+                          <Switch
+                            checked={variant.active || false}
+                            onCheckedChange={() => toggleVariantActive(variant.id)}
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeVariant(variant.id)}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      </div>
+                      <Textarea
+                        value={variant.answer}
+                        onChange={(e) => updateVariant(variant.id, { answer: e.target.value })}
+                        className="w-full"
+                        placeholder="Enter variant answer"
+                        rows={3}
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -253,6 +406,7 @@ export default function KnowledgeBaseManager({ channelId }: Props) {
     contextLimit: 1000,
     maxRagResults: 3,
     confidenceScore: 0.7,
+    variantTypes: [],
     ragSections: [],
   });
   const [isRagManagerOpen, setIsRagManagerOpen] = useState(false);
@@ -276,6 +430,7 @@ export default function KnowledgeBaseManager({ channelId }: Props) {
       contextLimit: 1000,
       maxRagResults: 3,
       confidenceScore: 0.7,
+      variantTypes: [],
       ragSections: [],
     });
   };
@@ -329,7 +484,7 @@ export default function KnowledgeBaseManager({ channelId }: Props) {
               </div>
             </div>
           </Card>
-          <RagManager ragSections={knowledgeBase.ragSections} updateRagSections={updateRagSections} />
+          <RagManager ragSections={knowledgeBase.ragSections} updateRagSections={updateRagSections} knowledgeBase={knowledgeBase} />
         </>
       ) : (
         <div className="text-center py-8">
@@ -398,6 +553,88 @@ export default function KnowledgeBaseManager({ channelId }: Props) {
           )}
           {wizardStep === 3 && (
             <div className="space-y-4">
+              <h4 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Define Variant Types</h4>
+              {newKnowledgeBase.variantTypes.map((variantType, index) => (
+                <Card key={variantType.id} className="p-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <Input
+                      value={variantType.name}
+                      onChange={(e) => {
+                        const updatedVariantTypes = [...newKnowledgeBase.variantTypes];
+                        updatedVariantTypes[index].name = e.target.value;
+                        setNewKnowledgeBase({...newKnowledgeBase, variantTypes: updatedVariantTypes});
+                      }}
+                      className="w-1/3 mr-2"
+                      placeholder="Variant type name"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const updatedVariantTypes = newKnowledgeBase.variantTypes.filter((_, i) => i !== index);
+                        setNewKnowledgeBase({...newKnowledgeBase, variantTypes: updatedVariantTypes});
+                      }}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    {variantType.options.map((option, optionIndex) => (
+                      <div key={optionIndex} className="flex items-center">
+                        <Input
+                          value={option}
+                          onChange={(e) => {
+                            const updatedVariantTypes = [...newKnowledgeBase.variantTypes];
+                            updatedVariantTypes[index].options[optionIndex] = e.target.value;
+                            setNewKnowledgeBase({...newKnowledgeBase, variantTypes: updatedVariantTypes});
+                          }}
+                          className="w-full mr-2"
+                          placeholder="Option"
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const updatedVariantTypes = [...newKnowledgeBase.variantTypes];
+                            updatedVariantTypes[index].options = updatedVariantTypes[index].options.filter((_, i) => i !== optionIndex);
+                            setNewKnowledgeBase({...newKnowledgeBase, variantTypes: updatedVariantTypes});
+                          }}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const updatedVariantTypes = [...newKnowledgeBase.variantTypes];
+                        updatedVariantTypes[index].options.push('');
+                        setNewKnowledgeBase({...newKnowledgeBase, variantTypes: updatedVariantTypes});
+                      }}
+                    >
+                      Add Option
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const newVariantType = {
+                    id: Date.now().toString(),
+                    name: '',
+                    options: ['']
+                  };
+                  setNewKnowledgeBase({...newKnowledgeBase, variantTypes: [...newKnowledgeBase.variantTypes, newVariantType]});
+                }}
+              >
+                Add Variant Type
+              </Button>
+            </div>
+          )}
+          {wizardStep === 4 && (
+            <div className="space-y-4">
               <h4 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">RAG Management</h4>
               {newKnowledgeBase.ragSections.map((section, sectionIndex) => (
                 <Card key={section.id} className="p-4">
@@ -463,7 +700,7 @@ export default function KnowledgeBaseManager({ channelId }: Props) {
                     size="sm"
                     onClick={() => {
                       const updatedSections = [...newKnowledgeBase.ragSections];
-                      updatedSections[sectionIndex].qaPairs.push({ question: '', answer: '' });
+                      updatedSections[sectionIndex].qaPairs.push({ question: '', answer: '', variants: [] });
                       setNewKnowledgeBase({...newKnowledgeBase, ragSections: updatedSections});
                     }}
                     className="mt-2"
@@ -477,7 +714,7 @@ export default function KnowledgeBaseManager({ channelId }: Props) {
                   const newSection: RagSection = {
                     id: Date.now().toString(),
                     title: '',
-                    qaPairs: [{ question: '', answer: '' }],
+                    qaPairs: [{ question: '', answer: '', variants: [] }],
                   };
                   setNewKnowledgeBase({
                     ...newKnowledgeBase,
@@ -493,7 +730,7 @@ export default function KnowledgeBaseManager({ channelId }: Props) {
             {wizardStep > 1 && (
               <Button variant="outline" onClick={handlePreviousStep}>Back</Button>
             )}
-            {wizardStep < 3 ? (
+            {wizardStep < 4 ? (
               <Button onClick={handleNextStep}>Next</Button>
             ) : (
               <Button onClick={handleCreateKnowledgeBase}>{knowledgeBase ? 'Update' : 'Create'}</Button>
